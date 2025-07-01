@@ -141,8 +141,11 @@ class EnemyShip(Ship):
     def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int):
         super().__init__(pos, speed, asset_path, screen, laser, max_health)
         self.moveDirection = DirectionQuant()
-        self.lastFire = datetime.datetime.now().microsecond
+        self.lastFire = self.get_timestamp()
         self.fire_rate = fire_rate
+
+    def get_timestamp(self):
+        return int(datetime.datetime.now().timestamp()*1000)
 
     def generateMove(self, playerShip:PlayerShip):
         self.moveDirection.reset()
@@ -166,9 +169,7 @@ class EnemyShip(Ship):
         self.angle += angleDiff / 10
 
     def fire(self):
-        self.fireRate = 2
-        self.lastFire = datetime.datetime.now()
-        elapsed = (datetime.datetime.now() - self.lastFire).total_seconds()
-        if elapsed >= 1 / self.fireRate:
+        diff = self.get_timestamp() - self.lastFire
+        if diff >= 1000/self.fire_rate:
             self.laser.fire(copy.deepcopy(self.pos), self.angle)
-            self.lastFire = datetime.datetime.now()
+            self.lastFire = self.get_timestamp()
