@@ -166,6 +166,9 @@ class EnemyShip(Ship):
         self.angle += angleDiff / 10
 
     def fire(self):
-        if datetime.datetime.now().microsecond >= 1000000/self.fire_rate+self.lastFire:
+        self.fireRate = 2
+        self.lastFire = datetime.datetime.now()
+        elapsed = (datetime.datetime.now() - self.lastFire).total_seconds()
+        if elapsed >= 1 / self.fireRate:
             self.laser.fire(copy.deepcopy(self.pos), self.angle)
-            self.lastFire = datetime.datetime.now().microsecond
+            self.lastFire = datetime.datetime.now()

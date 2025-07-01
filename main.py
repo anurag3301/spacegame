@@ -23,7 +23,7 @@ e1ship_laser = Laser(10, os.path.join(images_dir, 'bullet.png'), 10)
 e1ship = EnemyShip(Pos(100, 300), 2, os.path.join(images_dir, 'enemy.png'), screen, e1ship_laser, 200, 1)
 
 
-
+ 
 while running:
     # Event handling
     for event in pygame.event.get():
