@@ -155,6 +155,11 @@ class EnemyShip(Ship):
         distance = math.sqrt(dx**2 + dy**2)
         mx = dx/distance
         my = dy/distance
+        if distance < 250:
+            mx, my = 0, 0
+        elif distance < 500:
+            mx = 250/distance*mx
+            my = 250/distance*my
         if mx > 0:
             self.moveDirection.right = mx
         else:
