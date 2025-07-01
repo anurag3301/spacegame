@@ -6,23 +6,22 @@ from laser import Laser
 import threading
 import random
 
+running = True
 script_dir = os.path.dirname(os.path.abspath(__file__))
 images_dir = os.path.join(script_dir, 'images')
+enemy_ships = []
+score = 0
+
 # pygame setup
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
-running = True
-
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-images_dir = os.path.join(script_dir, 'images')
 
 ship_laser = Laser(10, os.path.join(images_dir, 'bullet.png'), 30)
 ship = PlayerShip(Pos(random.randint(0, 1280), random.randint(0, 720)), 4, os.path.join(images_dir, 'ship.png'), screen, ship_laser, 1000)
 e1ship_laser = Laser(10, os.path.join(images_dir, 'bullet.png'), 10)
+score_font = pygame.font.Font('freesansbold.ttf', 40)
 
-enemy_ships = []
 
 def new_enemy():
     if not running:
@@ -64,8 +63,15 @@ while running:
     for enemy_ship in enemy_ships[:]:
         if enemy_ship.health <= 0:
             enemy_ships.remove(enemy_ship)
+            score += 100
             continue
         process_enemy(enemy_ship)
+
+    text = score_font.render(str(score), True, (255,0,0), (20, 23, 36))
+
+    textRect = text.get_rect()
+    textRect.center = (80, 30)
+    screen.blit(text, textRect)
 
     # Update display
     pygame.display.flip()
