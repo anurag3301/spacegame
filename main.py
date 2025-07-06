@@ -44,8 +44,8 @@ name = ["Minigun", "Burst Fire", "Laser Cannon", "Plasma Barrel"]
 ship_laser = Laser(10, os.path.join(media_dir, f'bullet{weapon}.png'), damage[weapon])
 ship = PlayerShip(Pos(random.randint(0, 1280), random.randint(0, 720)), 4, os.path.join(media_dir, 'ship.png'), screen, ship_laser, 1000, firerate[weapon], weapon)
 e1ship_laser = Laser(10, os.path.join(media_dir, 'enemybullet.png'), 10)
-e2ship_laser = Laser(20, os.path.join(media_dir, 'bullet2.png'), 10)
-e3ship_laser = Laser(60, os.path.join(media_dir, 'bullet3.png'), 10)
+e2ship_laser = Laser(10, os.path.join(media_dir, 'bullet2.png'), 20)
+e3ship_laser = Laser(10, os.path.join(media_dir, 'bullet3.png'), 60)
 
 def scanlines(screen, spacing=3, alpha=128):
     for y in range(0, screen.get_height(), spacing):
@@ -65,7 +65,13 @@ def chromatic_aberration(screen, shift_amount=2): # ChatGPT helped with this fun
 def new_enemy():
     if not running:
         return
-    enemy_ships.append(EnemyShip2(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy1.png'), screen, e1ship_laser, random.randint(150, 270), 1, random.randint(1, 3)))
+    num = random.randint(1,3)
+    if num == 1:
+        enemy_ships.append(EnemyShip1(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy1.png'), screen, e1ship_laser, random.randint(150, 270), 1))
+    elif num == 2:
+        enemy_ships.append(EnemyShip2(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy2.png'), screen, e2ship_laser, random.randint(150, 270), 1))
+    else:
+        enemy_ships.append(EnemyShip3(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy3.png'), screen, e3ship_laser, random.randint(150, 270), 1))
     threading.Timer(5, new_enemy).start()
 
 def process_enemy(eship):

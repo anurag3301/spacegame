@@ -6,6 +6,7 @@ from enum import Enum
 from laser import Laser
 import datetime
 import copy
+import random as random
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 media_dir = os.path.join(script_dir, 'media')
@@ -158,12 +159,12 @@ class PlayerShip(Ship):
             self.weapon_sounds[self.selected_weapon].play()
 
 class EnemyShip1(Ship):
-    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int, moveset:int):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int):
         super().__init__(pos, speed, asset_path, screen, laser, max_health)
         self.moveDirection = DirectionQuant()
         self.lastFire = self.get_timestamp()
         self.fire_rate = fire_rate
-        self.moveset = moveset
+        
 
     def get_timestamp(self):
         return int(datetime.datetime.now().timestamp()*1000)
@@ -211,12 +212,12 @@ class EnemyShip1(Ship):
 
 
 class EnemyShip2(Ship):
-    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int, moveset:int):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int):
         super().__init__(pos, speed, asset_path, screen, laser, max_health)
         self.moveDirection = DirectionQuant()
         self.lastFire = self.get_timestamp()
         self.fire_rate = fire_rate
-        self.moveset = moveset
+        
         self.moveDirection.right = 1
 
     def get_timestamp(self):
@@ -243,6 +244,53 @@ class EnemyShip2(Ship):
         # else:
         #     self.moveDirection.up = abs(my)
 
+        desiredAngle = math.degrees(math.atan2(-dy, dx)) 
+        angleDiff = (desiredAngle - self.angle + 180) % 360 - 180
+        self.angle += angleDiff / 10
+
+    def fire(self):
+        diff = self.get_timestamp() - self.lastFire
+        if diff >= 1000/self.fire_rate:
+            self.laser.fire(copy.deepcopy(self.pos), self.angle, self.screen)
+            self.lastFire = self.get_timestamp()
+
+class EnemyShip3(Ship):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int):
+        super().__init__(pos, speed, asset_path, screen, laser, max_health)
+        self.moveDirection = DirectionQuant()
+        self.lastFire = self.get_timestamp()
+        self.fire_rate = fire_rate
+        
+        if random.randint(0,1) == 1:
+            self.moveDirection.right = 1
+            self.moveDirection.left = 0 
+        else:
+            self.moveDirection.right = 0
+            self.moveDirection.left = 1
+
+        if random.randint(0,1) == 1:
+            self.moveDirection.up = 1
+            self.moveDirection.down = 0 
+        else:
+            self.moveDirection.up = 0
+            self.moveDirection.down = 1
+
+    def get_timestamp(self):
+        return int(datetime.datetime.now().timestamp()*1000)
+
+    def generateMove(self, playerShip:PlayerShip):
+        dx = playerShip.pos.x - self.pos.x
+        dy = playerShip.pos.y - self.pos.y
+
+        if self.pos.x > 1230 or self.pos.x < 50:
+            temp = self.moveDirection.right
+            self.moveDirection.right = self.moveDirection.left
+            self.moveDirection.left = temp
+        if self.pos.y > 670 or self.pos.y < 50:
+            temp = self.moveDirection.up
+            self.moveDirection.up = self.moveDirection.down
+            self.moveDirection.down = temp
+        
         desiredAngle = math.degrees(math.atan2(-dy, dx)) 
         angleDiff = (desiredAngle - self.angle + 180) % 360 - 180
         self.angle += angleDiff / 10
