@@ -1,5 +1,6 @@
 import math
 import pygame as pygame
+import pygame.font
 import os as os
 from enum import Enum
 from laser import Laser
@@ -7,7 +8,7 @@ import datetime
 import copy
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-images_dir = os.path.join(script_dir, 'images')
+media_dir = os.path.join(script_dir, 'media')
 
 class Pos:
     def __init__(self, x:int, y:int):
@@ -45,7 +46,7 @@ class Ship:
         self.size = 100
         self.pos:Pos = pos
         self.speed:int = speed
-        self.texture = pygame.image.load(os.path.join(images_dir, asset_path)) 
+        self.texture = pygame.image.load(os.path.join(media_dir, asset_path)) 
         self.texture_size = (self.size, self.texture.get_height()/(self.texture.get_width()/self.size))
         self.texture = pygame.transform.scale(self.texture, self.texture_size)
         self.angle:float = 0
@@ -54,9 +55,11 @@ class Ship:
         self.laser:Laser = laser
         self.max_health = max_health
         self.health = max_health
+        font_path = os.path.join(media_dir, 'PIXY.ttf')
+        self.font = pygame.font.Font(font_path, 24)
 
     def fire(self):
-        self.laser.fire(copy.deepcopy(self.pos), self.angle)
+        self.laser.fire(copy.deepcopy(self.pos), self.angle, self.screen)
 
     def move(self):
         self.pos = self.moveDirection.new_pos(self.pos, self.speed)
@@ -82,42 +85,50 @@ class Ship:
     def draw(self):
         self.laser.move_and_draw(self.screen)
 
-        # def blurPos(topleft, amount):
-        #     bx, by = topleft
-        #     if self.moveDirection == "UP":
-        #         by += amount
-        #     elif self.moveDirection == "DOWN":
-        #         by -= amount
-        #     elif self.moveDirection == "RIGHT":
-        #         bx -= amount
-        #     elif self.moveDirection == "LEFT":
-        #         bx += amount
-        #     return (bx, by)
-
         rotated_ship = pygame.transform.rotate(self.texture, self.angle)
         new_rect = rotated_ship.get_rect(center=(self.pos.x, self.pos.y))
-        # rotated_ship.set_alpha(64)
-        # self.screen.blit(rotated_ship, blurPos(new_rect.topleft, 12))
-        # rotated_ship.set_alpha(128)
-        # self.screen.blit(rotated_ship, blurPos(new_rect.topleft, 6))
         rotated_ship.set_alpha(255)
         self.screen.blit(rotated_ship, new_rect.topleft)
 
+    def healthbar(self):
+        bar_width = 100
+        bar_height = 12
+        bar_x = self.pos.x - bar_width / 2
+        bar_y = self.pos.y - self.texture.get_height() - 20 
 
-        health_percentage = self.health / self.max_health * 100
-        if health_percentage < 50:
-            colour = (255, int(health_percentage*5.1), 0)
+        pygame.draw.rect(self.screen, (50, 50, 50), pygame.Rect(bar_x, bar_y, bar_width, bar_height))
+
+        health_percentage = max(0, self.health / self.max_health)
+        if health_percentage > 0.5:
+            red = int(255 * (1 - (health_percentage - 0.5) * 2))
+            green = 255
         else:
-            colour = (int(255-((health_percentage-50)*5.1)), 255, 0)
+            red = 255
+            green = int(255 * (health_percentage * 2))
+        colour = (red, green, 0)
 
-        hh, hw = 15, 100
-        pygame.draw.rect(self.screen, colour, pygame.Rect(self.pos.x-hw/2, self.pos.y-self.texture.get_height(), hw, hh), 2)
+        pygame.draw.rect(self.screen, colour, pygame.Rect(bar_x, bar_y, bar_width * health_percentage, bar_height))
 
-        pygame.draw.rect(self.screen, colour, pygame.Rect(self.pos.x-hw/2 + (100-health_percentage)/100*hw, self.pos.y-self.texture.get_height(), health_percentage/100*hw, hh))
+        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(bar_x, bar_y, bar_width, bar_height), 2)
+
+        health_text = str(int(self.health))
+        text_surf = self.font.render(health_text, True, colour)
+        text_rect = text_surf.get_rect(center=(bar_x + bar_width/2, bar_y + bar_height/2))
+
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            border_surf = self.font.render(health_text, True, (0,0,0))
+            border_rect = border_surf.get_rect(center=(text_rect.centerx + dx*2, text_rect.centery + dy*2))
+            self.screen.blit(border_surf, border_rect)
+
+        self.screen.blit(text_surf, text_rect)
 
 class PlayerShip(Ship):
-    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int, selected_weapon=0):
         super().__init__(pos, speed, asset_path, screen, laser, max_health)
+        self.lastFire = 0
+        self.fire_rate = fire_rate
+        self.selected_weapon = 0
+        self.weapon_sounds = [pygame.mixer.Sound(os.path.join(media_dir, f'weapon{i}.mp3')) for i in range(4)]
 
     def eval_input(self, key, mouse):
         self.moveDirection.reset()
@@ -135,6 +146,16 @@ class PlayerShip(Ship):
         desiredAngle = math.degrees(math.atan2(-dy, dx)) 
         angleDiff = (desiredAngle - self.angle + 180) % 360 - 180
         self.angle += angleDiff / 10
+        
+    def get_timestamp(self):
+        return int(datetime.datetime.now().timestamp()*1000)
+
+    def fire(self):
+        diff = self.get_timestamp() - self.lastFire
+        if diff >= 1000/self.fire_rate:
+            self.laser.fire(copy.deepcopy(self.pos), self.angle, self.screen)
+            self.lastFire = self.get_timestamp()
+            self.weapon_sounds[self.selected_weapon].play()
 
 
 class EnemyShip(Ship):
@@ -155,11 +176,20 @@ class EnemyShip(Ship):
         distance = math.sqrt(dx**2 + dy**2)
         mx = dx/distance
         my = dy/distance
-        if distance < 250:
+        if distance < 100: 
+            mx = -300/distance*mx
+            my = -300/distance*my
+        elif distance < 200: 
+            mx = -150/distance*mx
+            my = -150/distance*my
+        elif distance < 250:
             mx, my = 0, 0
         elif distance < 500:
             mx = 250/distance*mx
             my = 250/distance*my
+        elif distance < 700:
+            mx = 450/distance*mx
+            my = 450/distance*my
         if mx > 0:
             self.moveDirection.right = mx
         else:
@@ -176,5 +206,5 @@ class EnemyShip(Ship):
     def fire(self):
         diff = self.get_timestamp() - self.lastFire
         if diff >= 1000/self.fire_rate:
-            self.laser.fire(copy.deepcopy(self.pos), self.angle)
+            self.laser.fire(copy.deepcopy(self.pos), self.angle, self.screen)
             self.lastFire = self.get_timestamp()
