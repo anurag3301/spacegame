@@ -157,13 +157,13 @@ class PlayerShip(Ship):
             self.lastFire = self.get_timestamp()
             self.weapon_sounds[self.selected_weapon].play()
 
-
-class EnemyShip(Ship):
-    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int):
+class EnemyShip1(Ship):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int, moveset:int):
         super().__init__(pos, speed, asset_path, screen, laser, max_health)
         self.moveDirection = DirectionQuant()
         self.lastFire = self.get_timestamp()
         self.fire_rate = fire_rate
+        self.moveset = moveset
 
     def get_timestamp(self):
         return int(datetime.datetime.now().timestamp()*1000)
@@ -198,6 +198,50 @@ class EnemyShip(Ship):
             self.moveDirection.down = my
         else:
             self.moveDirection.up = abs(my)
+
+        desiredAngle = math.degrees(math.atan2(-dy, dx)) 
+        angleDiff = (desiredAngle - self.angle + 180) % 360 - 180
+        self.angle += angleDiff / 10
+
+    def fire(self):
+        diff = self.get_timestamp() - self.lastFire
+        if diff >= 1000/self.fire_rate:
+            self.laser.fire(copy.deepcopy(self.pos), self.angle, self.screen)
+            self.lastFire = self.get_timestamp()
+
+
+class EnemyShip2(Ship):
+    def __init__(self, pos:Pos, speed:int, asset_path:str, screen, laser:Laser, max_health:int, fire_rate:int, moveset:int):
+        super().__init__(pos, speed, asset_path, screen, laser, max_health)
+        self.moveDirection = DirectionQuant()
+        self.lastFire = self.get_timestamp()
+        self.fire_rate = fire_rate
+        self.moveset = moveset
+        self.moveDirection.right = 1
+
+    def get_timestamp(self):
+        return int(datetime.datetime.now().timestamp()*1000)
+
+    def generateMove(self, playerShip:PlayerShip):
+        dx = playerShip.pos.x - self.pos.x
+        dy = playerShip.pos.y - self.pos.y
+        
+        if self.pos.x > 1200:
+            self.moveDirection.right = 0
+            self.moveDirection.left = 1
+
+        elif self.pos.x < 80:
+            self.moveDirection.right = 1
+            self.moveDirection.left = 0
+
+        # if mx > 0:
+        #     self.moveDirection.right = mx
+        # else:
+        #     self.moveDirection.left = abs(mx)
+        # if my > 0:
+        #     self.moveDirection.down = my
+        # else:
+        #     self.moveDirection.up = abs(my)
 
         desiredAngle = math.degrees(math.atan2(-dy, dx)) 
         angleDiff = (desiredAngle - self.angle + 180) % 360 - 180
