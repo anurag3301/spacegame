@@ -65,10 +65,10 @@ def chromatic_aberration(screen, shift_amount=2): # ChatGPT helped with this fun
 def new_enemy():
     if not running:
         return
-    num = random.randint(1,3)
-    if num == 1:
+    num = random.randint(1,100)
+    if num <= 75:
         enemy_ships.append(EnemyShip1(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy1.png'), screen, e1ship_laser, random.randint(150, 270), 1))
-    elif num == 2:
+    elif num <= 90:
         enemy_ships.append(EnemyShip2(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy2.png'), screen, e2ship_laser, random.randint(150, 270), 1))
     else:
         enemy_ships.append(EnemyShip3(Pos(random.randint(0, 1280), random.randint(0, 720)), 2, os.path.join(media_dir, f'enemy3.png'), screen, e3ship_laser, random.randint(150, 270), 1))
