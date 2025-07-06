@@ -106,6 +106,16 @@ class Ship:
         else:
             red = 255
             green = int(255 * (health_percentage * 2))
+
+        if red >= 255:
+            red = 255
+        if green >= 255:
+            green = 255
+        if red <= 0:
+            red = 0
+        if green <= 0:
+            green = 0
+
         colour = (red, green, 0)
 
         pygame.draw.rect(self.screen, colour, pygame.Rect(bar_x, bar_y, bar_width * health_percentage, bar_height))

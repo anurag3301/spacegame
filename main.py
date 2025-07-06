@@ -87,6 +87,7 @@ while running:
     # Event handling
     screen.fill(pygame.Color(20, 23, 36))
     score += 0.025
+    ship.health += ship.health * 0.01
 
     bg_x = bg_x + (((ship.pos.x * 0.5) - bg_x) * 0.05)
     bg_y = bg_y + (((ship.pos.y * 0.5) - bg_y) * 0.05)
