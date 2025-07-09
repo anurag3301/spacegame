@@ -9,7 +9,7 @@ import copy
 import random as random
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-media_dir = os.path.join(script_dir, 'media')
+media_dir = 'media'
 
 class Pos:
     def __init__(self, x:int, y:int):
@@ -47,7 +47,7 @@ class Ship:
         self.size = 100
         self.pos:Pos = pos
         self.speed:int = speed
-        self.texture = pygame.image.load(os.path.join(media_dir, asset_path)) 
+        self.texture = pygame.image.load(os.path.join(asset_path)) 
         self.texture_size = (self.size, self.texture.get_height()/(self.texture.get_width()/self.size))
         self.texture = pygame.transform.scale(self.texture, self.texture_size)
         self.angle:float = 0
@@ -139,7 +139,7 @@ class PlayerShip(Ship):
         self.lastFire = 0
         self.fire_rate = fire_rate
         self.selected_weapon = 0
-        self.weapon_sounds = [pygame.mixer.Sound(os.path.join(media_dir, f'weapon{i}.mp3')) for i in range(4)]
+        self.weapon_sounds = [pygame.mixer.Sound(os.path.join(media_dir, f'weapon{i}.ogg')) for i in range(4)]
 
     def eval_input(self, key, mouse):
         self.moveDirection.reset()
