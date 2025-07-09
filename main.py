@@ -19,6 +19,8 @@ clock = pygame.time.Clock()
 pygame.display.init()
 pygame.mixer.init()
 
+clock = pygame.time.Clock()
+
 pixelSize = 2
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -206,8 +208,8 @@ async def main():
             small_surface = pygame.transform.scale(screen, small_size)
             pixelated_surface = pygame.transform.scale(small_surface, screen.get_size())
             screen.blit(pixelated_surface, (0, 0))
-
             scanlines(screen)
+
         for enemy_ship in enemy_ships:
             enemy_ship.healthbar()
         ship.healthbar()
@@ -215,6 +217,7 @@ async def main():
 
         pygame.display.flip()
         clock.tick(60)
+        print(clock.get_fps())
         await asyncio.sleep(0)
 
     pygame.quit()
