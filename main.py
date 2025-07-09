@@ -9,8 +9,10 @@ import pygame
 import numpy as np
 import pygame.surfarray
 import asyncio
+import time
 
 effects = True
+
 
 # pygame setup
 pygame.init()
@@ -25,6 +27,7 @@ pixelSize = 2
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 media_dir = 'media'
+final_surface = None
 
 background = pygame.image.load(os.path.join(media_dir, 'background.png'))
 stars = pygame.image.load(os.path.join(media_dir, 'stars.png'))
@@ -85,44 +88,54 @@ def process_enemy(eship):
     eship.fire()
     eship.hit_ship([ship])
     eship.draw()
+
+def calc_effect():
+    global final_surface, bg_x, bg_y
+    bg_x = bg_x + (((ship.pos.x * 0.5) - bg_x) * 0.05)
+    bg_y = bg_y + (((ship.pos.y * 0.5) - bg_y) * 0.05)
+    stars_surface = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+
+    for y_mult in range(-2, 3):
+        y_pos = y_mult * bg_height
+        for i in range(-2, 3): 
+            x = i * bg_width
+            stars_surface.blit(background, (x - bg_x, y_pos - bg_y))
+    
+    for y_mult in range(-2, 3):
+        y_pos = y_mult * bg_height
+        for i in range(-2, 3):
+            x = i * bg_width
+            center_x = x + stars_width // 2
+            center_y = y_pos + stars_height // 2
+
+            blit_x = center_x - rotated_width // 2 - int(bg_x * 0.5)
+            blit_y = center_y - rotated_height // 2 - int(bg_y * 0.5)
+
+            stars_surface.blit(rotated_stars, (blit_x, blit_y))
+    stars_small_size = (screen.get_width() // 4, screen.get_height() // 4)
+    stars_small = pygame.transform.scale(stars_surface, stars_small_size)
+    stars_pixelated = pygame.transform.scale(stars_small, (screen.get_width(), screen.get_height()))
+    final_surface = stars_pixelated
+
+
  
 async def main():
 
     asyncio.create_task(new_enemy_loop())
+    effect_tread = threading.Thread(target=calc_effect)
+    effect_tread.start()
 
-    global running, score, weapon, bg_x, bg_y, ship, enemy_ships
+    start, end = 0, 0
+    global running, score, weapon, bg_x, bg_y, ship, enemy_ships, final_surface
+
 
     while running:
         # Event handling
         screen.fill(pygame.Color(20, 23, 36))
         score += 0.025
 
-        if effects:
-            bg_x = bg_x + (((ship.pos.x * 0.5) - bg_x) * 0.05)
-            bg_y = bg_y + (((ship.pos.y * 0.5) - bg_y) * 0.05)
-
-            for y_mult in range(-2, 3):
-                y_pos = y_mult * bg_height
-                for i in range(-2, 3): 
-                    x = i * bg_width
-                    screen.blit(background, (x - bg_x, y_pos - bg_y))
-            
-            stars_surface = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
-            for y_mult in range(-2, 3):
-                y_pos = y_mult * bg_height
-                for i in range(-2, 3):
-                    x = i * bg_width
-                    center_x = x + stars_width // 2
-                    center_y = y_pos + stars_height // 2
-
-                    blit_x = center_x - rotated_width // 2 - int(bg_x * 0.5)
-                    blit_y = center_y - rotated_height // 2 - int(bg_y * 0.5)
-
-                    stars_surface.blit(rotated_stars, (blit_x, blit_y))
-            stars_small_size = (screen.get_width() // 4, screen.get_height() // 4)
-            stars_small = pygame.transform.scale(stars_surface, stars_small_size)
-            stars_pixelated = pygame.transform.scale(stars_small, (screen.get_width(), screen.get_height()))
-            screen.blit(stars_pixelated, (0, 0))
+        if effects and final_surface:
+            screen.blit(final_surface, (0, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -222,8 +235,9 @@ async def main():
         screen.blit(fps_text, fpsRect)
         pygame.display.flip()
         clock.tick(60)
-        print(clock.get_fps())
         await asyncio.sleep(0)
+
+    effect_tread.join()
 
     pygame.quit()
 
