@@ -214,7 +214,12 @@ async def main():
             enemy_ship.healthbar()
         ship.healthbar()
         chromatic_aberration(screen)
+        FPS_font = pygame.font.Font(font_path, 30)
+        fps_text = FPS_font.render(f"FPS: {int(clock.get_fps())}", True, (123, 172, 224))
 
+        fpsRect = fps_text.get_rect()
+        fpsRect.center = (80, 680)
+        screen.blit(fps_text, fpsRect)
         pygame.display.flip()
         clock.tick(60)
         print(clock.get_fps())
