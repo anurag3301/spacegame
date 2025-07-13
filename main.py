@@ -2,6 +2,7 @@ import pygame
 import os
 import math
 from ship import *
+from screen import *
 from laser import Laser
 import threading
 import random
@@ -41,6 +42,7 @@ rotated_width = rotated_stars.get_width()
 rotated_height = rotated_stars.get_height()
 
 running = True
+currentScreen = "start"
 enemy_ships = []
 score = 0
 weapon = 0
@@ -49,6 +51,8 @@ bg_y = 0
 damage = [6, 20, 35, 240]
 firerate = [20, 6, 4, 0.5]
 name = ["Minigun", "Burst Fire", "Laser Cannon", "Plasma Barrel"]
+
+initScreen()
 
 ship_laser = Laser(10, os.path.join(media_dir, f'bullet{weapon}.png'), damage[weapon])
 ship = PlayerShip(Pos(random.randint(0, 1280), random.randint(0, 720)), 4, os.path.join(media_dir, 'ship.png'), screen, ship_laser, 1000, firerate[weapon], weapon)
@@ -116,129 +120,137 @@ def calc_effect():
     stars_small = pygame.transform.scale(stars_surface, stars_small_size)
     stars_pixelated = pygame.transform.scale(stars_small, (screen.get_width(), screen.get_height()))
     final_surface = stars_pixelated
-
-
  
 async def main():
+    global running, score, weapon, bg_x, bg_y, ship, enemy_ships, final_surface, currentScreen
 
     asyncio.create_task(new_enemy_loop())
-    effect_tread = threading.Thread(target=calc_effect)
-    effect_tread.start()
-
-    start, end = 0, 0
-    global running, score, weapon, bg_x, bg_y, ship, enemy_ships, final_surface
-
+    effect_thread = threading.Thread(target=calc_effect)
+    effect_thread.start()
 
     while running:
-        # Event handling
-        screen.fill(pygame.Color(20, 23, 36))
-        score += 0.025
-
-        if effects and final_surface:
-            screen.blit(final_surface, (0, 0))
+        if Button.isOver(startButton, pygame.mouse.get_pos()):
+            if pygame.mouse.get_pressed()[0]:
+                currentScreen = 'main'
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+                if event.type == pygame.QUIT:
+                    running = False
+        if currentScreen == 'main':
+            # Event handling
+            screen.fill(pygame.Color(20, 23, 36))
+            score += 0.025
+
+            if effects and final_surface:
+                screen.blit(final_surface, (0, 0))
+
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        weapon = 0
+                        pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
+                    elif event.key == pygame.K_2:
+                        weapon = 1
+                        pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
+                    elif event.key == pygame.K_3:
+                        weapon = 2
+                        pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
+                    elif event.key == pygame.K_4:
+                        weapon = 3
+                        pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
+
+            ship.laser.damage = damage[weapon]
+            ship.fire_rate = firerate[weapon]
+            ship.selected_weapon = weapon
+            ship.laser.texture = pygame.image.load(os.path.join(media_dir, f'bullet{weapon}.png'))
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_SPACE]:
+                ship.fire()
+
+            mouse_pos = pygame.mouse.get_pos()
+            ship.eval_input(keys, mouse_pos)
+            ship.move()
+
+            ship.hit_ship(enemy_ships)
+            ship.draw()
+
+            if ship.health <= 0:
                 running = False
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
-                    weapon = 0
-                    pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
-                elif event.key == pygame.K_2:
-                    weapon = 1
-                    pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
-                elif event.key == pygame.K_3:
-                    weapon = 2
-                    pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
-                elif event.key == pygame.K_4:
-                    weapon = 3
-                    pygame.mixer.Sound(os.path.join(media_dir, 'switch.ogg')).play()
+                screen.fill(pygame.Color(6, 4, 10))
+                game_over_font = pygame.font.Font(os.path.join(media_dir, 'PIXY.ttf'), 80)
+                game_over_text = game_over_font.render("GAME OVER.", True, (255, 0, 0))
+                
+                font_path = os.path.join(media_dir, 'PIXY.ttf')
+                score_font = pygame.font.Font(font_path, 40)
+                text = score_font.render(f"Final Score: {int(score)}", True, (230, 152, 57))
+                pygame.mixer.Sound(os.path.join(media_dir, 'gameOver.ogg')).play()
+                textRect = text.get_rect()
+                textRect.center = (640, 60)
+                screen.blit(text, textRect)
+                text_rect = game_over_text.get_rect(center=(640, 360))
+                screen.blit(game_over_text, text_rect)
 
-        ship.laser.damage = damage[weapon]
-        ship.fire_rate = firerate[weapon]
-        ship.selected_weapon = weapon
-        ship.laser.texture = pygame.image.load(os.path.join(media_dir, f'bullet{weapon}.png'))
+                pygame.display.flip()
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            ship.fire()
+                pygame.time.delay(3000)
+                break # So the game quits after 3 seconds
 
-        mouse_pos = pygame.mouse.get_pos()
-        ship.eval_input(keys, mouse_pos)
-        ship.move()
+            for enemy_ship in enemy_ships[:]:
+                if enemy_ship.health <= 0:
+                    enemy_ships.remove(enemy_ship)
+                    score += 100
+                    pygame.mixer.Sound(os.path.join(media_dir, 'explosion.ogg')).play()
+                    continue
+                process_enemy(enemy_ship)
 
-        ship.hit_ship(enemy_ships)
-        ship.draw()
-
-        if ship.health <= 0:
-            running = False
-            screen.fill(pygame.Color(6, 4, 10))
-            game_over_font = pygame.font.Font(os.path.join(media_dir, 'PIXY.ttf'), 80)
-            game_over_text = game_over_font.render("GAME OVER.", True, (255, 0, 0))
-            
             font_path = os.path.join(media_dir, 'PIXY.ttf')
             score_font = pygame.font.Font(font_path, 40)
-            text = score_font.render(f"Final Score: {int(score)}", True, (230, 152, 57))
-            pygame.mixer.Sound(os.path.join(media_dir, 'gameOver.ogg')).play()
+            text = score_font.render(f"Score: {int(score)}", True, (230, 152, 57))
+            
             textRect = text.get_rect()
             textRect.center = (640, 60)
             screen.blit(text, textRect)
-            text_rect = game_over_text.get_rect(center=(640, 360))
-            screen.blit(game_over_text, text_rect)
 
-            pygame.display.flip()
+            weapon_font = pygame.font.Font(font_path, 30)
+            weapon_text = weapon_font.render(f"Weapon: {name[weapon]} (1-4 to switch)", True, (123, 172, 224))
 
-            pygame.time.delay(3000)
-            break # So the game quits after 3 seconds
+            weaponRect = weapon_text.get_rect()
+            weaponRect.center = (640, 680)
+            screen.blit(weapon_text, weaponRect)
 
-        for enemy_ship in enemy_ships[:]:
-            if enemy_ship.health <= 0:
-                enemy_ships.remove(enemy_ship)
-                score += 100
-                pygame.mixer.Sound(os.path.join(media_dir, 'explosion.ogg')).play()
-                continue
-            process_enemy(enemy_ship)
+            FPS_font = pygame.font.Font(font_path, 30)
+            fps_text = FPS_font.render(f"FPS: {int(clock.get_fps())}", True, (123, 172, 224))
 
-        font_path = os.path.join(media_dir, 'PIXY.ttf')
-        score_font = pygame.font.Font(font_path, 40)
-        text = score_font.render(f"Score: {int(score)}", True, (230, 152, 57))
-        
-        textRect = text.get_rect()
-        textRect.center = (640, 60)
-        screen.blit(text, textRect)
+            fpsRect = fps_text.get_rect()
+            fpsRect.center = (80, 680)
+            screen.blit(fps_text, fpsRect)
 
-        weapon_font = pygame.font.Font(font_path, 30)
-        weapon_text = weapon_font.render(f"Weapon: {name[weapon]} (1-4 to switch)", True, (123, 172, 224))
+            if effects:
+                small_size = (screen.get_width() // pixelSize, screen.get_height() // pixelSize)
+                small_surface = pygame.transform.scale(screen, small_size)
+                pixelated_surface = pygame.transform.scale(small_surface, screen.get_size())
+                screen.blit(pixelated_surface, (0, 0))
+                scanlines(screen)
 
-        weaponRect = weapon_text.get_rect()
-        weaponRect.center = (640, 680)
-        screen.blit(weapon_text, weaponRect)
-
-        FPS_font = pygame.font.Font(font_path, 30)
-        fps_text = FPS_font.render(f"FPS: {int(clock.get_fps())}", True, (123, 172, 224))
-
-        fpsRect = fps_text.get_rect()
-        fpsRect.center = (80, 680)
-        screen.blit(fps_text, fpsRect)
-
-        if effects:
-            small_size = (screen.get_width() // pixelSize, screen.get_height() // pixelSize)
-            small_surface = pygame.transform.scale(screen, small_size)
-            pixelated_surface = pygame.transform.scale(small_surface, screen.get_size())
-            screen.blit(pixelated_surface, (0, 0))
+            for enemy_ship in enemy_ships:
+                enemy_ship.healthbar()
+            ship.healthbar()
+            chromatic_aberration(screen)
+        elif currentScreen == 'start':
+            screenRender()
+            chromatic_aberration(screen)
             scanlines(screen)
 
-        for enemy_ship in enemy_ships:
-            enemy_ship.healthbar()
-        ship.healthbar()
-        chromatic_aberration(screen)
+        else:
+            print("Unknown screen:", currentScreen)
+            pygame.quit()
+            return
+
         pygame.display.flip()
         clock.tick(60)
         await asyncio.sleep(0)
-
-    effect_tread.join()
+    effect_thread.join()
 
     pygame.quit()
 
