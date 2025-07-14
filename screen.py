@@ -9,6 +9,8 @@ text = None
 textRect = None
 name = None
 nameRect = None
+ship_image = None
+ship_rect = None
 
 class Button: 
     def __init__(self, color, hoverColor, x, y, width, height, text=''):
@@ -44,7 +46,7 @@ class Button:
         return False
 
 def initScreen():
-    global text, textRect, name, nameRect
+    global text, textRect, name, nameRect, ship_image, ship_rect
     
     font_path = os.path.join(media_dir, 'PIXY.ttf')
     font = pygame.font.Font(font_path, 80)
@@ -53,13 +55,17 @@ def initScreen():
     textRect = text.get_rect(center=(640, 60))
     
     score_font = pygame.font.Font(font_path, 40)
-    name = score_font.render(f"Sandeep Shenoy", True, (230, 152, 57))
+    name = score_font.render(f"Made by Sandeep Shenoy", True, (230, 152, 57))
     nameRect = name.get_rect()
     nameRect.center = (640, 60)
     nameRect = name.get_rect(center=(640, 680))
 
+    ship_image = pygame.image.load(os.path.join(media_dir, 'shipRender.png')).convert_alpha()
+    ship_image = pygame.transform.scale(ship_image, (600, 350))
+    ship_rect = ship_image.get_rect(center=(640, 280))
+
 def screenRender():
-    screen.fill(pygame.Color(6, 4, 10))
+    screen.blit(ship_image, ship_rect)
     startButton.draw(screen)
     screen.blit(text, textRect)
     screen.blit(name, nameRect)
