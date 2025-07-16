@@ -156,7 +156,8 @@ async def main():
     global running, score, weapon, bg_x, bg_y, ship, enemy_ships, final_surface, currentScreen, paused
 
     asyncio.create_task(new_enemy_loop())
-    calc_effect()
+    effect_thread = threading.Thread(target=calc_effect)
+    effect_thread.start()
 
     pygame.mouse.set_visible(True)
 
