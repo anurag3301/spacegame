@@ -44,6 +44,8 @@ rotated_height = rotated_stars.get_height()
 crosshair_img = pygame.image.load(os.path.join(media_dir, 'crosshair.png')).convert_alpha()
 crosshair_img = pygame.transform.scale(crosshair_img, (crosshair_img.get_width() * 5, crosshair_img.get_height() * 5))
 
+startscreen =  StartScreen(media_dir, screen)
+
 # Add crosshair_angle after loading the crosshair image
 crosshair_angle = 0
 
@@ -60,7 +62,6 @@ damage = [6, 20, 35, 240]
 firerate = [20, 6, 4, 0.5]
 name = ["Minigun", "Burst Fire", "Laser Cannon", "Plasma Barrel"]
 
-initScreen()
 
 ship_laser = Laser(10, os.path.join(media_dir, f'bullet{weapon}.png'), damage[weapon])
 ship = PlayerShip(Pos(random.randint(0, 1280), random.randint(0, 720)), 4, os.path.join(media_dir, 'ship.png'), screen, ship_laser, 1000, firerate[weapon], weapon)
@@ -185,7 +186,7 @@ async def main():
                         paused = False
                         pause_surface = None
 
-        if Button.isOver(startButton, pygame.mouse.get_pos()):
+        if Button.isOver(startscreen.startButton, pygame.mouse.get_pos()):
             if pygame.mouse.get_pressed()[0]:
                 currentScreen = 'main'
 
@@ -287,7 +288,7 @@ async def main():
         elif currentScreen == 'start':
             if effects and final_surface:
                 screen.blit(final_surface, (0, 0))
-            screenRender()
+            startscreen.screenRender()
             chromatic_aberration(screen)
             scanlines(screen)
 

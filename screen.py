@@ -1,19 +1,9 @@
 import pygame
 import os
 
-pygame.init()
-screen = pygame.display.set_mode((1280, 720))
-clock = pygame.time.Clock()
-running = True
-text = None
-textRect = None
-name = None
-nameRect = None
-ship_image = None
-ship_rect = None
 
-class Button: 
-    def __init__(self, color, hoverColor, x, y, width, height, text=''):
+class Button:
+    def __init__(self, color, hoverColor, x, y, width, height, media_dir, text=""):
         self.color = color
         self.hoverColor = hoverColor
         self.x = x
@@ -21,6 +11,7 @@ class Button:
         self.width = width
         self.height = height
         self.text = text
+        self.media_dir = media_dir
 
     def draw(self, win, outline=None):
         # Call this method to draw the button on the screen
@@ -33,7 +24,7 @@ class Button:
             pygame.draw.rect(win, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
         
         if self.text != '':
-            font = pygame.font.Font(os.path.join(media_dir, 'PIXY.ttf'), 60)
+            font = pygame.font.Font(os.path.join(self.media_dir, 'PIXY.ttf'), 60)
             text = font.render(self.text, 1, (255, 255, 255))
             win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
@@ -45,33 +36,32 @@ class Button:
             
         return False
 
-def initScreen():
-    global text, textRect, name, nameRect, ship_image, ship_rect
-    
-    font_path = os.path.join(media_dir, 'PIXY.ttf')
-    font = pygame.font.Font(font_path, 80)
-    startButton = Button(buttonColor, 500, 520, 280, 80, 'Start!')
-    text = font.render("Space Game", True, (255, 0, 0))
-    textRect = text.get_rect(center=(640, 60))
-    
-    score_font = pygame.font.Font(font_path, 40)
-    name = score_font.render(f"Made by Sandeep Shenoy", True, (230, 152, 57))
-    nameRect = name.get_rect()
-    nameRect.center = (640, 60)
-    nameRect = name.get_rect(center=(640, 680))
 
-    ship_image = pygame.image.load(os.path.join(media_dir, 'shipRender.png')).convert_alpha()
-    ship_image = pygame.transform.scale(ship_image, (600, 350))
-    ship_rect = ship_image.get_rect(center=(640, 280))
+class StartScreen:
+    def __init__(self, media_dir, screen):
+        buttonColor = (72, 163, 73)
+        hoverColor = (92, 183, 93)
+        font_path = os.path.join(media_dir, "PIXY.ttf")
+        font = pygame.font.Font(font_path, 80)
+        self.startButton = Button(buttonColor, hoverColor, 500, 520, 280, 80, media_dir, "Start!")
+        self.text = font.render("Space Game", True, (255, 0, 0))
+        self.textRect = self.text.get_rect(center=(640, 60))
 
-def screenRender():
-    screen.blit(ship_image, ship_rect)
-    startButton.draw(screen)
-    screen.blit(text, textRect)
-    screen.blit(name, nameRect)
+        score_font = pygame.font.Font(font_path, 40)
+        self.name = score_font.render(f"Made by Sandeep Shenoy", True, (230, 152, 57))
+        self.nameRect = self.name.get_rect()
+        self.nameRect.center = (640, 60)
+        self.nameRect = self.name.get_rect(center=(640, 680))
 
-buttonColor = (72, 163, 73)
-hoverColor = (92, 183, 93)
-startButton = Button(buttonColor, hoverColor, 500, 520, 280, 80, 'Start!')
-script_dir = os.path.dirname(os.path.abspath(__file__))
-media_dir = 'media'
+        self.ship_image = pygame.image.load(
+            os.path.join(media_dir, "shipRender.png")
+        ).convert_alpha()
+        self.ship_image = pygame.transform.scale(self.ship_image, (600, 350))
+        self.ship_rect = self.ship_image.get_rect(center=(640, 280))
+        self.screen = screen
+
+    def screenRender(self):
+        self.screen.blit(self.ship_image, self.ship_rect)
+        self.startButton.draw(self.screen)
+        self.screen.blit(self.text, self.textRect)
+        self.screen.blit(self.name, self.nameRect)
