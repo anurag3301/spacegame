@@ -46,6 +46,14 @@ class StartScreen:
         self.startButton = Button(buttonColor, hoverColor, 500, 520, 280, 80, media_dir, "Start!")
         self.text = font.render("Space Game", True, (255, 0, 0))
         self.textRect = self.text.get_rect(center=(640, 60))
+        
+        highscore_file_path = "spacegame.sav"
+        if os.path.exists(highscore_file_path):
+            file = open(highscore_file_path, "r")
+            highscore = int(file.readline())
+            file.close()
+        self.highScore = pygame.font.Font(font_path, 40).render(f"High Score: {highscore}", True, (170, 189, 240))
+        self.highScoreRect = self.highScore.get_rect(center=(640, 115))
 
         score_font = pygame.font.Font(font_path, 40)
         self.name = score_font.render(f"Made by Sandeep Shenoy", True, (230, 152, 57))
@@ -65,3 +73,4 @@ class StartScreen:
         self.startButton.draw(self.screen)
         self.screen.blit(self.text, self.textRect)
         self.screen.blit(self.name, self.nameRect)
+        self.screen.blit(self.highScore, self.highScoreRect)
