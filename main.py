@@ -14,6 +14,17 @@ import time
 
 effects = True
 
+
+highscore = 0
+
+highscore_file_path = "spacegame.sav"
+
+if os.path.exists(highscore_file_path):
+    file = open(highscore_file_path, "r")
+    highscore = int(file.readline())
+    file.close()
+
+
 # pygame setup
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -301,5 +312,10 @@ async def main():
         await asyncio.sleep(0)
 
     pygame.quit()
+    if score > highscore:
+        file = open(highscore_file_path, "w")
+        file.write(str(int(score)))
+        file.close()
+
 
 asyncio.run(main())
