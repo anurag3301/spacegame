@@ -1,6 +1,6 @@
 import pygame
 import os
-
+from config import *
 
 class Button:
     def __init__(self, color, hoverColor, x, y, width, height, media_dir, text=""):
@@ -47,7 +47,6 @@ class StartScreen:
         self.text = font.render("Space Game", True, (255, 0, 0))
         self.textRect = self.text.get_rect(center=(640, 60))
         
-        highscore_file_path = "spacegame.sav"
         if os.path.exists(highscore_file_path):
             file = open(highscore_file_path, "r")
             highscore = int(file.readline())

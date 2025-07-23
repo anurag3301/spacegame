@@ -10,14 +10,10 @@ import pygame
 import numpy as np
 import pygame.surfarray
 import asyncio
-import time
+from config import *
 
 effects = True
-
-
 highscore = 0
-
-highscore_file_path = "spacegame.sav"
 
 if os.path.exists(highscore_file_path):
     file = open(highscore_file_path, "r")
