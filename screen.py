@@ -46,7 +46,7 @@ class StartScreen:
         self.startButton = Button(buttonColor, hoverColor, 500, 520, 280, 80, media_dir, "Start!")
         self.text = font.render("Space Game", True, (255, 0, 0))
         self.textRect = self.text.get_rect(center=(640, 60))
-        
+        highscore = 0
         if os.path.exists(highscore_file_path):
             file = open(highscore_file_path, "r")
             highscore = int(file.readline())
